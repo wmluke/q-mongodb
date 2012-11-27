@@ -1,5 +1,6 @@
 var Db = require('mongodb').Db,
     Server = require('mongodb').Server,
+    ObjectID = require('mongodb').ObjectID,
     _ = require('underscore'),
     Q = require('q');
 
@@ -66,23 +67,34 @@ var QCollection = function (qOpen, collectionName) {
     };
 
     /**
-     * @param article {Object|Array}
+     * @param doc {Object|Array}
      * @return {*}
      */
-    this.insert = function (article) {
+    this.insert = function (doc) {
         return qOpen
             .then(function (db) {
                 var collection = db.collection(collectionName);
-                return Q.ncall(collection.insert, collection, _.isArray(article) ? article : [article]);
+                return Q.ncall(collection.insert, collection, _.isArray(doc) ? doc : [doc], {safe: true});
             });
     };
 
-
-    this.save = function (article) {
+    this.update = function (selector, doc) {
         return qOpen
             .then(function (db) {
                 var collection = db.collection(collectionName);
-                return Q.ncall(collection.save, collection, article);
+                var id = doc._id;
+                selector = selector || {};
+                doc._id = new ObjectID(id);
+                selector._id = new ObjectID(id);
+                return Q.ncall(collection.update, collection, selector, doc, {safe: true});
+            });
+    };
+
+    this.save = function (doc) {
+        return qOpen
+            .then(function (db) {
+                var collection = db.collection(collectionName);
+                return Q.ncall(collection.save, collection, doc, {safe: true});
             });
     };
 
