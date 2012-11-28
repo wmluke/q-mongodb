@@ -43,25 +43,31 @@ var QDb = {
 
 var QCollection = function (qOpen, collectionName) {
 
-    this.read = function (id) {
+    this.createObjectId = function (id) {
+        return new ObjectID(id);
+    };
+
+    this.read = function (id, options) {
         return qOpen.then(function (db) {
             var collection = db.collection(collectionName);
-            return Q.ncall(collection.findOne, collection, {_id: id});
+            return Q.ncall(collection.findOne, collection, {_id: id}, options || {});
         });
     };
 
     this.findOne = function (selector, options) {
         return qOpen.then(function (db) {
             var collection = db.collection(collectionName);
-            return Q.ncall(collection.findOne, collection, selector, options);
+            return Q.ncall(collection.findOne, collection, selector || {}, options || {});
         });
     };
-
 
     this.find = function (selector, options) {
         return qOpen.then(function (db) {
             var collection = db.collection(collectionName);
-            return Q.ncall(collection.find, collection, selector, options);
+            return Q.ncall(collection.find, collection, selector || {}, options || {})
+                .then(function (cursor) {
+                    return new QCursor(cursor);
+                });
         });
 
     };
@@ -82,11 +88,7 @@ var QCollection = function (qOpen, collectionName) {
         return qOpen
             .then(function (db) {
                 var collection = db.collection(collectionName);
-                var id = doc._id;
-                selector = selector || {};
-                doc._id = new ObjectID(id);
-                selector._id = new ObjectID(id);
-                return Q.ncall(collection.update, collection, selector, doc, {safe: true});
+                return Q.ncall(collection.update, collection, selector || {}, doc, {safe: true});
             });
     };
 
@@ -101,13 +103,42 @@ var QCollection = function (qOpen, collectionName) {
     this.remove = function (selector, options) {
         return qOpen.then(function (db) {
             var collection = db.collection(collectionName);
-            return Q.ncall(collection.remove, collection, selector, options);
+            return Q.ncall(collection.remove, collection, selector || {}, options || {});
         });
     };
+};
 
+var QCursor = function (cursor) {
+
+    this.cursor = cursor;
+
+    /**
+     * @return {QCursor}
+     */
+    this.limit = function (number) {
+        cursor.limit(number);
+        return this;
+    };
+
+    /**
+     * @return {QCursor}
+     */
+    this.skip = function (number) {
+        cursor.skip(number);
+        return this;
+    };
+
+    this.count = function () {
+        return Q.ncall(cursor.count, cursor);
+    };
+
+    this.toArray = function () {
+        return Q.ncall(cursor.toArray, cursor);
+    };
 };
 
 module.exports = {
     QDb: QDb,
-    QCollection: QCollection
+    QCollection: QCollection,
+    QCursor: QCursor
 };
