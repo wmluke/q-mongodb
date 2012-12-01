@@ -43,15 +43,14 @@ var QDb = {
 
 var QCollection = function (qOpen, collectionName) {
 
+    var __self__ = this;
+
     this.createObjectId = function (id) {
         return new ObjectID(id);
     };
 
     this.read = function (id, options) {
-        return qOpen.then(function (db) {
-            var collection = db.collection(collectionName);
-            return Q.ncall(collection.findOne, collection, {_id: id}, options || {});
-        });
+        return __self__.findOne({_id: id}, options);
     };
 
     this.findOne = function (selector, options) {
@@ -74,36 +73,41 @@ var QCollection = function (qOpen, collectionName) {
 
     /**
      * @param doc {Object|Array}
+     * @param options {Object}
      * @return {*}
      */
-    this.insert = function (doc) {
+    this.insert = function (doc, options) {
+        options = _.extend({safe: true}, options);
         return qOpen
             .then(function (db) {
                 var collection = db.collection(collectionName);
-                return Q.ncall(collection.insert, collection, _.isArray(doc) ? doc : [doc], {safe: true});
+                return Q.ncall(collection.insert, collection, _.isArray(doc) ? doc : [doc], options);
             });
     };
 
-    this.update = function (selector, doc) {
+    this.update = function (selector, doc, options) {
+        options = _.extend({safe: true}, options);
         return qOpen
             .then(function (db) {
                 var collection = db.collection(collectionName);
-                return Q.ncall(collection.update, collection, selector || {}, doc, {safe: true});
+                return Q.ncall(collection.update, collection, selector || {}, doc, options);
             });
     };
 
-    this.save = function (doc) {
+    this.save = function (doc, options) {
+        options = _.extend({safe: true}, options);
         return qOpen
             .then(function (db) {
                 var collection = db.collection(collectionName);
-                return Q.ncall(collection.save, collection, doc, {safe: true});
+                return Q.ncall(collection.save, collection, doc, options);
             });
     };
 
     this.remove = function (selector, options) {
+        options = _.extend({safe: true}, options);
         return qOpen.then(function (db) {
             var collection = db.collection(collectionName);
-            return Q.ncall(collection.remove, collection, selector || {}, options || {});
+            return Q.ncall(collection.remove, collection, selector || {}, options);
         });
     };
 };
