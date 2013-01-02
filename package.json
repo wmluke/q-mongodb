@@ -1,0 +1,17 @@
+{
+    "name": "q-mongodb",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "start": "node app"
+    },
+    "dependencies": {
+        "nodeunit": "0.7.4",
+        "express": "3.0.3",
+        "less-middleware": "*",
+        "underscore": "1.4.2",
+        "underscore.string": "2.3.0",
+        "mongodb": "1.1.11",
+        "q": "0.8.10"
+    }
+}
